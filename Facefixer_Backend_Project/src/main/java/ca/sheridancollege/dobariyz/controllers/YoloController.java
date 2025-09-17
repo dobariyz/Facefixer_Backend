@@ -31,6 +31,7 @@ import ca.sheridancollege.dobariyz.beans.DetectionResult;
 import ca.sheridancollege.dobariyz.beans.User;
 import ca.sheridancollege.dobariyz.repositories.UserRepository;
 import ca.sheridancollege.dobariyz.services.DetectionResultService;
+//import ca.sheridancollege.dobariyz.services.S3Service;
 import ca.sheridancollege.dobariyz.util.JwtUtil;
 
 	@CrossOrigin(origins = "http://localhost:5173")
@@ -38,24 +39,24 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 	@RequestMapping("/api")
 	public class YoloController {
 		
-		 @Autowired
-		    private JwtUtil jwtService;
-		 
+		@Autowired
+		private JwtUtil jwtService;
 
 		@Autowired
 		private UserRepository userRepository;
 		
+		//AWS
+		//@Autowired
+		//private S3Service s3Service;
+		
 		@Autowired
 		private DetectionResultService detectionResultService;
-
-	
+		
 		private static final String YOLO_SCRIPT = "yolo/yolo_detect.py";
 		private static final String MODEL_PATH = "yolo/my_model.pt";
 	    private static final String UPLOAD_DIR = "uploads/";
 	    private static final String OUTPUT_DIR = "outputs/";
 	
-
-	    
 	    @CrossOrigin(origins = "http://localhost:5173")
 	    @PostMapping("/detect")
 	    public ResponseEntity<Map<String, String>> detectObjects(
@@ -67,13 +68,6 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 	                        .body(Map.of("error", "Unauthorized"));
 	            }
 
-	            // ✅ Extract email based on login type
-//	            String email = null;
-//	            if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
-//	                email = oauth2User.getAttribute("email");  // Google login
-//	            } else if (authentication.getPrincipal() instanceof UserDetails userDetails) {
-//	                email = userDetails.getUsername();        // JWT login
-//	            }
 	            String email = null;
 	            if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
 	                email = oauth2User.getAttribute("email");  // ✅ This is the actual Google email
@@ -147,7 +141,91 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 	                    .body(Map.of("error", "Error processing image: " + e.getMessage()));
 	        }
 	    }
+	    
+	 // Only uncomment this if you ready to use AWS, otherwise don't change fuck out of it!
 
+//	    @CrossOrigin(origins = "http://localhost:5173")
+//	    @PostMapping("/detect")
+//	    public ResponseEntity<Map<String, String>> detectObjects(
+//	            Authentication authentication,
+//	            @RequestParam("file") MultipartFile file) {
+//
+//	        try {
+//	            if (authentication == null || !authentication.isAuthenticated()) {
+//	                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//	                        .body(Map.of("error", "Unauthorized"));
+//	            }
+//
+//	            // Get email
+//	            String email = null;
+//	            if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
+//	                email = oauth2User.getAttribute("email");
+//	            } else if (authentication.getPrincipal() instanceof UserDetails userDetails) {
+//	                email = userDetails.getUsername();
+//	            }
+//
+//	            if (email == null) {
+//	                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//	                        .body(Map.of("error", "Email not found"));
+//	            }
+//
+//	            // Temp local storage
+//	            Path tempDir = Files.createTempDirectory("facefixer-upload-");
+//	            Path originalPath = tempDir.resolve(file.getOriginalFilename());
+//	            Files.write(originalPath, file.getBytes());
+//
+//	            Path processedPath = tempDir.resolve("detected_" + file.getOriginalFilename());
+//
+//	            // Run YOLO detection
+//	            ProcessBuilder pb = new ProcessBuilder(
+//	                    "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+//	                    YOLO_SCRIPT,
+//	                    MODEL_PATH,
+//	                    originalPath.toString(),
+//	                    processedPath.toString()
+//	            );
+//	            pb.redirectErrorStream(true);
+//	            Process process = pb.start();
+//	            process.waitFor();
+//
+//	            // Upload to S3
+//	            s3Service.uploadFile("uploads/" + file.getOriginalFilename(), originalPath);
+//	            s3Service.uploadFile("outputs/detected_" + file.getOriginalFilename(), processedPath);
+//
+//	            // Clean up local temp files
+//	            Files.deleteIfExists(originalPath);
+//	            Files.deleteIfExists(processedPath);
+//	            Files.deleteIfExists(tempDir);
+//
+//	            // Fetch user
+//	            Optional<User> userOpt = userRepository.findFirstByEmail(email);
+//	            if (userOpt.isEmpty()) {
+//	                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//	                        .body(Map.of("error", "User not found: " + email));
+//	            }
+//	            User user = userOpt.get();
+//
+//	            // Save detection result in DB (with S3 keys)
+//	            DetectionResult result = new DetectionResult();
+//	            result.setUser(user);
+//	            result.setImagePath("uploads/" + file.getOriginalFilename());
+//	            result.setResultPath("outputs/detected_" + file.getOriginalFilename());
+//	            result.setCreatedAt(LocalDateTime.now());
+//	            result.setDetections("[]");
+//	            detectionResultService.saveResult(result);
+//
+//	            // ✅ Return backend-accessible URLs for frontend
+//	            return ResponseEntity.ok(Map.of(
+//	                    "uploaded", "/api/image?file=" + file.getOriginalFilename(),
+//	                    "processed", "/api/image?file=" + "detected_" + file.getOriginalFilename()
+//	            ));
+//
+//	        } catch (Exception e) {
+//	            e.printStackTrace();
+//	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//	                    .body(Map.of("error", "Error processing image: " + e.getMessage()));
+//	        }
+//	    }
 
 	    
 	    @CrossOrigin(origins = "http://localhost:5173")
@@ -169,6 +247,25 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 	                .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"))
 	                .body(resource);
 	    }
+	    
+//	    @CrossOrigin(origins = "http://localhost:5173")
+//	    @GetMapping("/image")
+//	    public ResponseEntity<byte[]> getImage(@RequestParam("file") String filename) {
+//	        try {
+//	            String key = filename.startsWith("detected_")
+//	                    ? "outputs/" + filename
+//	                    : "uploads/" + filename;
+//
+//	            byte[] fileBytes = s3Service.downloadFile(key);
+//
+//	            return ResponseEntity.ok()
+//	                    .contentType(MediaType.IMAGE_PNG)
+//	                    .body(fileBytes);
+//	        } catch (Exception e) {
+//	            return ResponseEntity.notFound().build();
+//	        }
+//	    }
+
 
 	}
 	
