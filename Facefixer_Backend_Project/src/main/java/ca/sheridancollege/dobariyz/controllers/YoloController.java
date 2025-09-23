@@ -90,22 +90,35 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 	            Files.createDirectories(Paths.get(OUTPUT_DIR));
 
 	            // Run YOLO script
+	            String jsonOutputPath = OUTPUT_DIR + "summary_" + file.getOriginalFilename() + ".json";
+
 	            ProcessBuilder pb = new ProcessBuilder(
 	                    "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
 	                    YOLO_SCRIPT,
 	                    MODEL_PATH,
 	                    imagePath.toString(),
-	                    outputImagePath
+	                    outputImagePath,
+	                    jsonOutputPath
+	                    
 	            );
 	            pb.redirectErrorStream(true);
 	            Process process = pb.start();
 
 	            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-	            String resultPath = reader.readLine();
-	            process.waitFor();
+		         String line;
+		         while ((line = reader.readLine()) != null) {
+		             System.out.println("PYTHON >> " + line);
+		         }
+		         process.waitFor();
 
-	            System.out.println("🔎 Email from Authentication: " + email);
-
+		         // ✅ Read JSON file content (after Python finishes)
+		         String detectionsJson = "";
+		         Path jsonPath = Paths.get(jsonOutputPath);
+		         if (Files.exists(jsonPath)) {
+		             detectionsJson = Files.readString(jsonPath);  // <-- load JSON string
+		         } else {
+		             detectionsJson = "{}"; // fallback
+		         }
 
 	            // Fetch user by email
 	            Optional<User> userOpt = userRepository.findFirstByEmail(email);
@@ -127,7 +140,8 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 	            result.setImagePath(file.getOriginalFilename());
 	            result.setResultPath("detected_" + file.getOriginalFilename());
 	            result.setCreatedAt(LocalDateTime.now());
-	            result.setDetections("[]");
+	            result.setDetections(detectionsJson);  // ✅ now saving actual JSON!
+
 
 	            detectionResultService.saveResult(result);
 
