@@ -147,7 +147,8 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 
 	            return ResponseEntity.ok(Map.of(
 	                "uploaded", "/api/image?file=" + file.getOriginalFilename(),
-	                "processed", "/api/image?file=" + "detected_" + file.getOriginalFilename()
+	                "processed", "/api/image?file=" + "detected_" + file.getOriginalFilename(),
+	                "detections", result.getDetections() // <-- JSON string
 	            ));
 
 	        } catch (Exception e) {
