@@ -111,7 +111,7 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 		         }
 		         process.waitFor();
 
-		         // ✅ Read JSON file content (after Python finishes)
+		         // Read JSON file content (after Python finishes)
 		         String detectionsJson = "";
 		         Path jsonPath = Paths.get(jsonOutputPath);
 		         if (Files.exists(jsonPath)) {
@@ -122,10 +122,6 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 
 	            // Fetch user by email
 	            Optional<User> userOpt = userRepository.findFirstByEmail(email);
-//	            if (userOpt.isEmpty()) {
-//	                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//	                        .body(Map.of("error", "User not found."));
-//	            }
 	            if (userOpt.isEmpty()) {
 	                System.out.println("❌ No user found for email: " + email);
 	                return ResponseEntity.status(HttpStatus.NOT_FOUND)
@@ -140,7 +136,7 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 	            result.setImagePath(file.getOriginalFilename());
 	            result.setResultPath("detected_" + file.getOriginalFilename());
 	            result.setCreatedAt(LocalDateTime.now());
-	            result.setDetections(detectionsJson);  // ✅ now saving actual JSON!
+	            result.setDetections(detectionsJson);  //  now saving actual JSON!
 
 
 	            detectionResultService.saveResult(result);
@@ -157,7 +153,7 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 	        }
 	    }
 	    
-	 // Only uncomment this if you ready to use AWS, otherwise don't change fuck out of it!
+	 // Only uncomment this if you ready to use AWS, otherwise don't change anything out of it!
 
 //	    @CrossOrigin(origins = "http://localhost:5173")
 //	    @PostMapping("/detect")
@@ -262,6 +258,7 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 	                .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"))
 	                .body(resource);
 	    }
+	}
 	    
 //	    @CrossOrigin(origins = "http://localhost:5173")
 //	    @GetMapping("/image")
@@ -282,5 +279,5 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 //	    }
 
 
-	}
+	
 	

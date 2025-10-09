@@ -41,7 +41,7 @@ public class SecurityConfig {
                 		//.requestMatchers("/", "/auth/signupUser", "/auth/loginUser", "/auth/google","/auth/validate-token", "/auth/generate-token","/api/detect","/api/image").permitAll()
                        // .requestMatchers("/api/detect").authenticated() // PROTECTED: Requires JWT!
 		        		.requestMatchers("/", "/auth/signupUser", "/auth/loginUser", "/auth/google",
-		                        "/auth/validate-token", "/auth/generate-token", "/api/image").permitAll()
+		                        "/auth/validate-token", "/auth/generate-token", "/api/image","/api/recommendations").permitAll()
 		        		.requestMatchers("/api/detect").authenticated()
 
 		        		.anyRequest().authenticated()  // Everything else is protected

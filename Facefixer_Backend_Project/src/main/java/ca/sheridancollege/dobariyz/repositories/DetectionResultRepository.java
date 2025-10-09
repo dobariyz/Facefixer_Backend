@@ -1,6 +1,7 @@
 package ca.sheridancollege.dobariyz.repositories;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -11,6 +12,8 @@ public interface DetectionResultRepository extends JpaRepository<DetectionResult
 
     List<DetectionResult> findByUser(User user);
     List<DetectionResult> findByUserId(Long userId);
+
+    Optional<DetectionResult> findFirstByUserOrderByCreatedAtDesc(User user);
 
 
 }

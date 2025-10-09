@@ -81,7 +81,7 @@ public ResponseEntity<List<DetectionResult>> getUserResults(@PathVariable Long u
 
 }
 
-// Only uncomment this if you ready to use AWS, otherwise don't change fuck out of it!
+// Only uncomment this if you ready to use AWS, otherwise don't change anything out of it!
 
 //@RestController
 //@RequestMapping("/api/detections")
