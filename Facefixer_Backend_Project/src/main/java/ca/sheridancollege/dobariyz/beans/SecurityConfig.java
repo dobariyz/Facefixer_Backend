@@ -35,11 +35,8 @@ public class SecurityConfig {
         httpSecurity
 		        .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Enable CORS
 		        .csrf(csrf -> csrf.disable())
-		        //.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Ensure Stateless Auth (No Sessions!)
-		        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
+		        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 		        .authorizeHttpRequests(auth -> auth
-                		//.requestMatchers("/", "/auth/signupUser", "/auth/loginUser", "/auth/google","/auth/validate-token", "/auth/generate-token","/api/detect","/api/image").permitAll()
-                       // .requestMatchers("/api/detect").authenticated() // PROTECTED: Requires JWT!
 		        		.requestMatchers("/", "/auth/signupUser", "/auth/loginUser", "/auth/google",
 		                        "/auth/validate-token", "/auth/generate-token", "/api/image","/api/recommendations").permitAll()
 		        		.requestMatchers("/api/detect").authenticated()
@@ -47,21 +44,12 @@ public class SecurityConfig {
 		        		.anyRequest().authenticated()  // Everything else is protected
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class) // Ensure JWT filter is before authentication
-//                .oauth2Login(oauth -> oauth
-//                                .userInfoEndpoint(userInfo -> userInfo.oidcUserService(oAuthUserService))
-//                                .successHandler((request, response, authentication) -> {
-//                                    String email = authentication.getName();
-//                                    String jwtToken = jwtService.generateToken(email);
-//                                    response.setHeader("Authorization", "Bearer " + jwtToken);
-//                                    response.sendRedirect("http://localhost:5173/dashboard?token=" + jwtToken);
-//                                })
-//                )
                 .oauth2Login(oauth -> oauth
                 	    .userInfoEndpoint(userInfo -> userInfo.oidcUserService(oAuthUserService))
                 	    .successHandler((request, response, authentication) -> {
                 	        OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
                 	        
-                	        // ✅ Get email properly
+                	        //  Get email properly
                 	        String email = oauth2User.getAttribute("email");
                 	        
                 	        // Optional: if email is still null, fallback to "sub"

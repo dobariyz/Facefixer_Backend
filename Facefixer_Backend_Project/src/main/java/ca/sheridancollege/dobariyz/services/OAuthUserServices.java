@@ -22,34 +22,6 @@ public class OAuthUserServices extends OidcUserService {
         this.userRepository = userRepository;
     }
 
-//    @Override
-//    public OidcUser loadUser(OidcUserRequest userRequest) {
-//    	
-//    	// Calls the default implementation to load the OIDC user information from the identity provider (IdP)
-//        OidcUser oidcUser = super.loadUser(userRequest);
-//
-//        // Extracts user attributes from the OIDC token
-//        String email = oidcUser.getAttribute("email");
-//        String firstName = oidcUser.getAttribute("given_name");
-//        String lastName = oidcUser.getAttribute("family_name");
-//        String profilePicture = oidcUser.getAttribute("picture");
-//
-//        // Searches for an existing user in the database by email
-//       List<User> existingUser = userRepository.findByEmail(email);
-//
-//        // If the user does not exist in the database, create a new user entry
-//        if (existingUser.isEmpty()) {
-//            User newUser = new User();
-//            newUser.setEmail(email);
-//            newUser.setFirstName(firstName);
-//            newUser.setLastName(lastName);
-//            newUser.setPassword(null); // no password for Google users
-//            newUser.setProfilePicture(profilePicture);
-//            userRepository.save(newUser);
-//     }
-//        
-//        return oidcUser;
-//    }
     @Override
     public OidcUser loadUser(OidcUserRequest userRequest) {
         OidcUser oidcUser = super.loadUser(userRequest);

@@ -1,0 +1,63 @@
+{
+    "summary": {
+        "acne": {
+            "count": 5,
+            "min_conf": 37.67,
+            "max_conf": 55.84,
+            "avg_conf": 46.31
+        }
+    },
+    "detections": [
+        {
+            "class": "acne",
+            "confidence": 55.84,
+            "bbox": [
+                465,
+                960,
+                522,
+                1030
+            ]
+        },
+        {
+            "class": "acne",
+            "confidence": 50.27,
+            "bbox": [
+                550,
+                456,
+                607,
+                501
+            ]
+        },
+        {
+            "class": "acne",
+            "confidence": 50.06,
+            "bbox": [
+                394,
+                856,
+                474,
+                926
+            ]
+        },
+        {
+            "class": "acne",
+            "confidence": 37.71,
+            "bbox": [
+                326,
+                812,
+                383,
+                856
+            ]
+        },
+        {
+            "class": "acne",
+            "confidence": 37.67,
+            "bbox": [
+                388,
+                1092,
+                441,
+                1159
+            ]
+        }
+    ],
+    "recommendations": []
+}

@@ -52,7 +52,7 @@ public class SephoraService {
             Map<String, Object> currentSku = (Map<String, Object>) product.get("currentSku");
             if (currentSku == null) continue;
 
-            // ✅ safely parse rating
+            //  safely parse rating
             double rating = 0.0;
             if (product.get("rating") != null) {
                 try {
@@ -60,7 +60,7 @@ public class SephoraService {
                 } catch (NumberFormatException ignored) {}
             }
 
-            // ✅ keep only good products
+            //  keep only good products
             if (rating < 4.0) continue;
 
             String price = (currentSku.get("listPrice") != null)
@@ -80,7 +80,7 @@ public class SephoraService {
             cleaned.add(item);
         }
 
-        // ✅ always return top 5
+        //  always return top 5
         return cleaned.size() > 5 ? cleaned.subList(0, 5) : cleaned;
     }
 

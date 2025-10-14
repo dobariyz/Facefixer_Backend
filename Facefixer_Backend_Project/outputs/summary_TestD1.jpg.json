@@ -1,0 +1,33 @@
+{
+    "summary": {
+        "dark circle": {
+            "count": 2,
+            "min_conf": 27.38,
+            "max_conf": 32.0,
+            "avg_conf": 29.69
+        }
+    },
+    "detections": [
+        {
+            "class": "dark circle",
+            "confidence": 32.0,
+            "bbox": [
+                280,
+                117,
+                402,
+                169
+            ]
+        },
+        {
+            "class": "dark circle",
+            "confidence": 27.38,
+            "bbox": [
+                45,
+                121,
+                168,
+                170
+            ]
+        }
+    ],
+    "recommendations": []
+}

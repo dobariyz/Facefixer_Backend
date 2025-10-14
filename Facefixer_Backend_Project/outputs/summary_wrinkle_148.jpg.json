@@ -1,0 +1,69 @@
+{
+    "summary": {
+        "wrinkle": {
+            "count": 3,
+            "min_conf": 39.23,
+            "max_conf": 54.13,
+            "avg_conf": 48.68
+        },
+        "dark circle": {
+            "count": 2,
+            "min_conf": 28.64,
+            "max_conf": 35.84,
+            "avg_conf": 32.24
+        }
+    },
+    "detections": [
+        {
+            "class": "wrinkle",
+            "confidence": 54.13,
+            "bbox": [
+                159,
+                218,
+                200,
+                259
+            ]
+        },
+        {
+            "class": "wrinkle",
+            "confidence": 52.69,
+            "bbox": [
+                360,
+                97,
+                431,
+                172
+            ]
+        },
+        {
+            "class": "wrinkle",
+            "confidence": 39.23,
+            "bbox": [
+                394,
+                195,
+                461,
+                290
+            ]
+        },
+        {
+            "class": "dark circle",
+            "confidence": 35.84,
+            "bbox": [
+                168,
+                182,
+                236,
+                225
+            ]
+        },
+        {
+            "class": "dark circle",
+            "confidence": 28.64,
+            "bbox": [
+                280,
+                126,
+                359,
+                178
+            ]
+        }
+    ],
+    "recommendations": []
+}
