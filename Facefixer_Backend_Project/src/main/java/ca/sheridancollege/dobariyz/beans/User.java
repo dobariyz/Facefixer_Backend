@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @Data
 @Table(name = "users")
 public class User {
-
+//testing push
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
