@@ -93,7 +93,7 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 	            String jsonOutputPath = OUTPUT_DIR + "summary_" + file.getOriginalFilename() + ".json";
 
 	            ProcessBuilder pb = new ProcessBuilder(
-	                    "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+	                    "C:\\\\Python312\\\\python.exe",
 	                    YOLO_SCRIPT,
 	                    MODEL_PATH,
 	                    imagePath.toString(),

@@ -36,5 +36,20 @@ public class DetectionResultService {
         return repository.findById(id);
     }
 
+    public boolean deleteDetectionByIdAndEmail(Long id, String email) {
+        Optional<User> userOpt = userRepository.findFirstByEmail(email);
+        if (userOpt.isEmpty()) {
+            return false;
+        }
+
+        Optional<DetectionResult> detectionOpt = repository.findById(id);
+        if (detectionOpt.isPresent() && detectionOpt.get().getUser().equals(userOpt.get())) {
+            repository.deleteById(id);
+            return true;
+        }
+
+        return false;
+    }
+
 
 }

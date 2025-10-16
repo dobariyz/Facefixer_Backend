@@ -1,6 +1,7 @@
 package ca.sheridancollege.dobariyz.controllers;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -8,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -77,9 +79,38 @@ public ResponseEntity<List<DetectionResult>> getUserResults(@PathVariable Long u
         List<DetectionResult> results = detectionResultRepository.findByUserId(user.getId());
         return ResponseEntity.ok(results);
     }
+    
+ // Delete a specific detection history by ID
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteDetection(@PathVariable Long id, Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        }
 
+        String email = null;
+        if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
+            email = oauth2User.getAttribute("email");
+        } else if (authentication.getPrincipal() instanceof UserDetails userDetails) {
+            email = userDetails.getUsername();
+        }
+
+        if (email == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Invalid user session"));
+        }
+
+        boolean deleted = service.deleteDetectionByIdAndEmail(id, email);
+        if (deleted) {
+            return ResponseEntity.ok(Map.of("message", "Detection history deleted successfully"));
+        } else {
+            return ResponseEntity.status(404).body(Map.of("error", "Detection not found or unauthorized"));
+        }
+    }
 
 }
+
+//Add below line of code if we want to delete the path of the image from S3 also. (This is specifically for history image deletion)
+//s3Service.deleteFile(detectionOpt.get().getImagePath());
+//s3Service.deleteFile(detectionOpt.get().getResultPath());
 
 // Only uncomment this if you ready to use AWS, otherwise don't change anything out of it!
 
