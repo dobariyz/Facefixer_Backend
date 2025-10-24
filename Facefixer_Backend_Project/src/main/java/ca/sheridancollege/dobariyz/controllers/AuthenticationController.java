@@ -1,6 +1,7 @@
 package ca.sheridancollege.dobariyz.controllers;
 
 import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import ca.sheridancollege.dobariyz.beans.User;
+import ca.sheridancollege.dobariyz.repositories.UserRepository;
 import ca.sheridancollege.dobariyz.services.AuthenticationService;
 import ca.sheridancollege.dobariyz.util.JwtUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,11 +28,13 @@ public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
     private final JwtUtil jwtUtil;
+    private final UserRepository userRepository; //
 
     @Autowired
-    public AuthenticationController(AuthenticationService authenticationService, JwtUtil jwtUtil) {
+    public AuthenticationController(AuthenticationService authenticationService, JwtUtil jwtUtil, UserRepository userRepository ) {
         this.authenticationService = authenticationService;
         this.jwtUtil = jwtUtil;
+        this.userRepository = userRepository;
     }
 
     @CrossOrigin(origins = "*")
@@ -91,4 +95,37 @@ public class AuthenticationController {
      boolean isValid = jwtUtil.validateToken(token, jwtUtil.extractEmail(token));
      return isValid ? "Valid Token" : "Invalid Token";
 	 }
+    
+ // Add this new endpoint
+    @CrossOrigin(origins = "*")
+    @GetMapping("/user-profile")
+    public ResponseEntity<?> getUserProfile(@RequestHeader("Authorization") String token) {
+        try {
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+            
+            String email = jwtUtil.extractEmail(token);
+            
+            if (!jwtUtil.validateToken(token, email)) {
+                return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
+            }
+            
+            Optional<User> userOpt = userRepository.findFirstByEmail(email);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+            }
+            
+            User user = userOpt.get();
+            Map<String, Object> response = Map.of(
+                "firstName", user.getFirstName(),
+                "lastName", user.getLastName(),
+                "email", user.getEmail()
+            );
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Error fetching user profile"));
+        }
+    }
 }
