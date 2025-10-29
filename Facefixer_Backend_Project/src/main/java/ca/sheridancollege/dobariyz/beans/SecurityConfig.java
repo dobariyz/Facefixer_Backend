@@ -38,7 +38,7 @@ public class SecurityConfig {
 		        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 		        .authorizeHttpRequests(auth -> auth
 		        		.requestMatchers("/", "/auth/signupUser", "/auth/loginUser", "/auth/google",
-		                        "/auth/validate-token", "/auth/generate-token", "/api/image","/api/recommendations").permitAll()
+		                        "/auth/validate-token", "/auth/generate-token", "/api/image","/api/recommendations","/api/products/search").permitAll()
 		        		.requestMatchers("/api/detect").authenticated()
 
 		        		.anyRequest().authenticated()  // Everything else is protected

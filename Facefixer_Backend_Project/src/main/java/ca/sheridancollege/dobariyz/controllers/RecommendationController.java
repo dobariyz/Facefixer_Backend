@@ -48,7 +48,7 @@ public class RecommendationController {
                         .body(Map.of("error", "Unauthorized"));
             }
 
-           String email = null;
+            String email = null;
             if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
                 email = oauth2User.getAttribute("email");
             } else if (authentication.getPrincipal() instanceof UserDetails userDetails) {
@@ -61,9 +61,9 @@ public class RecommendationController {
             }
 
             User user = userRepository.findFirstByEmail(email)
-                    .orElseThrow(() -> new RuntimeException("User not found "));
+                    .orElseThrow(() -> new RuntimeException("User not found"));
 
-         // Fetch the DetectionResult for this user
+            // 2️⃣ Fetch the DetectionResult for this user
             DetectionResult detectionResult;
             if (imageId != null) {
                 Optional<DetectionResult> optResult = detectionResultService.findById(imageId);
@@ -82,7 +82,7 @@ public class RecommendationController {
                 detectionResult = latest.get();
             }
 
-            // 3️ Parse detections JSON
+            // 3️⃣ Parse detections JSON
             Map<String, Object> detectionsJson = objectMapper.readValue(
                     detectionResult.getDetections(), Map.class);
 
@@ -91,10 +91,11 @@ public class RecommendationController {
                 return ResponseEntity.ok(Map.of("message", "No keywords detected for this image"));
             }
 
-            // 4️ Fetch top 5 products for each keyword
+            // 4️⃣ Fetch top 5 products for each keyword (recommendations page)
             Map<String, List<Map<String, Object>>> recommendations = new HashMap<>();
             for (String keyword : summary.keySet()) {
-                List<Map<String, Object>> products = sephoraService.getProducts(keyword);
+                // ✅ Fixed: Now passing limit parameter (5 for recommendations page)
+                List<Map<String, Object>> products = sephoraService.getProducts(keyword, 5);
                 recommendations.put(keyword, products);
             }
 

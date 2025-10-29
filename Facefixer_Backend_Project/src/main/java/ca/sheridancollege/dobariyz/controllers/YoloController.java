@@ -31,127 +31,314 @@ import ca.sheridancollege.dobariyz.beans.DetectionResult;
 import ca.sheridancollege.dobariyz.beans.User;
 import ca.sheridancollege.dobariyz.repositories.UserRepository;
 import ca.sheridancollege.dobariyz.services.DetectionResultService;
+import ca.sheridancollege.dobariyz.services.S3Service;
 //import ca.sheridancollege.dobariyz.services.S3Service;
 import ca.sheridancollege.dobariyz.util.JwtUtil;
 
-	@CrossOrigin(origins = "http://localhost:5173")
-	@RestController
-	@RequestMapping("/api")
-	public class YoloController {
-		
-		@Autowired
-		private JwtUtil jwtService;
+//	@CrossOrigin(origins = "http://localhost:5173")
+//	@RestController
+//	@RequestMapping("/api")
+//	public class YoloController {
+//		
+//		@Autowired
+//		private JwtUtil jwtService;
+//
+//		@Autowired
+//		private UserRepository userRepository;
+//		
+//		//AWS
+//		@Autowired
+//		private S3Service s3Service;
+//		
+//		@Autowired
+//		private DetectionResultService detectionResultService;
+//		
+//		private static final String YOLO_SCRIPT = "yolo/yolo_detect.py";
+//		private static final String MODEL_PATH = "yolo/my_model.pt";
+//	    private static final String UPLOAD_DIR = "uploads/";
+//	    private static final String OUTPUT_DIR = "outputs/";
+//	
+//	    @CrossOrigin(origins = "http://localhost:5173")
+//	    @PostMapping("/detect")
+//	    public ResponseEntity<Map<String, String>> detectObjects(
+//	            Authentication authentication,
+//	            @RequestParam("file") MultipartFile file) {
+//	        try {
+//	            if (authentication == null || !authentication.isAuthenticated()) {
+//	                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//	                        .body(Map.of("error", "Unauthorized"));
+//	            }
+//
+//	            String email = null;
+//	            if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
+//	                email = oauth2User.getAttribute("email");  // ✅ This is the actual Google email
+//	            } else if (authentication.getPrincipal() instanceof UserDetails userDetails) {
+//	                email = userDetails.getUsername();
+//	            }
+//
+//	            if (email == null) {
+//	                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+//	                        .body(Map.of("error", "Email not found in authentication."));
+//	            }
+//
+//	            // Save uploaded image
+//	            Path imagePath = Paths.get(UPLOAD_DIR + file.getOriginalFilename());
+//	            Files.createDirectories(imagePath.getParent());
+//	            Files.write(imagePath, file.getBytes());
+//
+//	            // Output image path
+//	            String outputImagePath = OUTPUT_DIR + "detected_" + file.getOriginalFilename();
+//	            Files.createDirectories(Paths.get(OUTPUT_DIR));
+//
+//	            // Run YOLO script
+//	            String jsonOutputPath = OUTPUT_DIR + "summary_" + file.getOriginalFilename() + ".json";
+//
+//	            ProcessBuilder pb = new ProcessBuilder(
+//	                    "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+//	                    YOLO_SCRIPT,
+//	                    MODEL_PATH,
+//	                    imagePath.toString(),
+//	                    outputImagePath,
+//	                    jsonOutputPath
+//	                    
+//	            );
+//	            pb.redirectErrorStream(true);
+//	            Process process = pb.start();
+//
+//	            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+//		         String line;
+//		         while ((line = reader.readLine()) != null) {
+//		             System.out.println("PYTHON >> " + line);
+//		         }
+//		         process.waitFor();
+//
+//		         // Read JSON file content (after Python finishes)
+//		         String detectionsJson = "";
+//		         Path jsonPath = Paths.get(jsonOutputPath);
+//		         if (Files.exists(jsonPath)) {
+//		             detectionsJson = Files.readString(jsonPath);  // <-- load JSON string
+//		         } else {
+//		             detectionsJson = "{}"; // fallback
+//		         }
+//
+//	            // Fetch user by email
+//	            Optional<User> userOpt = userRepository.findFirstByEmail(email);
+//	            if (userOpt.isEmpty()) {
+//	                System.out.println("❌ No user found for email: " + email);
+//	                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//	                        .body(Map.of("error", "User not found: " + email));
+//	            }
+//
+//	            User user = userOpt.get();
+//
+//	            // Save detection result
+//	            DetectionResult result = new DetectionResult();
+//	            result.setUser(user);
+//	            result.setImagePath(file.getOriginalFilename());
+//	            result.setResultPath("detected_" + file.getOriginalFilename());
+//	            result.setCreatedAt(LocalDateTime.now());
+//	            result.setDetections(detectionsJson);  //  now saving actual JSON!
+//
+//
+//	            detectionResultService.saveResult(result);
+//
+//	            return ResponseEntity.ok(Map.of(
+//	                "uploaded", "/api/image?file=" + file.getOriginalFilename(),
+//	                "processed", "/api/image?file=" + "detected_" + file.getOriginalFilename(),
+//	                "detections", result.getDetections() // <-- JSON string
+//	            ));
+//
+//	        } catch (Exception e) {
+//	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//	                    .body(Map.of("error", "Error processing image: " + e.getMessage()));
+//	        }
+//	    }
 
-		@Autowired
-		private UserRepository userRepository;
-		
-		//AWS
-		//@Autowired
-		//private S3Service s3Service;
-		
-		@Autowired
-		private DetectionResultService detectionResultService;
-		
-		private static final String YOLO_SCRIPT = "yolo/yolo_detect.py";
-		private static final String MODEL_PATH = "yolo/my_model.pt";
-	    private static final String UPLOAD_DIR = "uploads/";
-	    private static final String OUTPUT_DIR = "outputs/";
-	
-	    @CrossOrigin(origins = "http://localhost:5173")
-	    @PostMapping("/detect")
-	    public ResponseEntity<Map<String, String>> detectObjects(
-	            Authentication authentication,
-	            @RequestParam("file") MultipartFile file) {
-	        try {
-	            if (authentication == null || !authentication.isAuthenticated()) {
-	                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-	                        .body(Map.of("error", "Unauthorized"));
-	            }
+@CrossOrigin(origins = "http://localhost:5173")
+@RestController
+@RequestMapping("/api")
+public class YoloController {
+    
+    @Autowired
+    private JwtUtil jwtService;
 
-	            String email = null;
-	            if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
-	                email = oauth2User.getAttribute("email");  // ✅ This is the actual Google email
-	            } else if (authentication.getPrincipal() instanceof UserDetails userDetails) {
-	                email = userDetails.getUsername();
-	            }
+    @Autowired
+    private UserRepository userRepository;
+    
+    @Autowired
+    private S3Service s3Service;
+    
+    @Autowired
+    private DetectionResultService detectionResultService;
+    
+    private static final String YOLO_SCRIPT = "yolo/yolo_detect.py";
+    private static final String MODEL_PATH = "yolo/my_model.pt";
 
-	            if (email == null) {
-	                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-	                        .body(Map.of("error", "Email not found in authentication."));
-	            }
+    @CrossOrigin(origins = "http://localhost:5173")
+    @PostMapping("/detect")
+    public ResponseEntity<Map<String, String>> detectObjects(
+            Authentication authentication,
+            @RequestParam("file") MultipartFile file) {
 
-	            // Save uploaded image
-	            Path imagePath = Paths.get(UPLOAD_DIR + file.getOriginalFilename());
-	            Files.createDirectories(imagePath.getParent());
-	            Files.write(imagePath, file.getBytes());
+        Path tempDir = null;
+        Path originalPath = null;
+        Path processedPath = null;
+        Path jsonPath = null;
 
-	            // Output image path
-	            String outputImagePath = OUTPUT_DIR + "detected_" + file.getOriginalFilename();
-	            Files.createDirectories(Paths.get(OUTPUT_DIR));
+        try {
+            // ✅ 1. Authentication Check
+            if (authentication == null || !authentication.isAuthenticated()) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Unauthorized"));
+            }
 
-	            // Run YOLO script
-	            String jsonOutputPath = OUTPUT_DIR + "summary_" + file.getOriginalFilename() + ".json";
+            // ✅ 2. Get User Email
+            String email = null;
+            if (authentication.getPrincipal() instanceof OAuth2User oauth2User) {
+                email = oauth2User.getAttribute("email");
+            } else if (authentication.getPrincipal() instanceof UserDetails userDetails) {
+                email = userDetails.getUsername();
+            }
 
-	            ProcessBuilder pb = new ProcessBuilder(
-	                    "C:\\\\Python312\\\\python.exe",
-	                    YOLO_SCRIPT,
-	                    MODEL_PATH,
-	                    imagePath.toString(),
-	                    outputImagePath,
-	                    jsonOutputPath
-	                    
-	            );
-	            pb.redirectErrorStream(true);
-	            Process process = pb.start();
+            if (email == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "Email not found in authentication"));
+            }
 
-	            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-		         String line;
-		         while ((line = reader.readLine()) != null) {
-		             System.out.println("PYTHON >> " + line);
-		         }
-		         process.waitFor();
+            // ✅ 3. Create Temp Directory for Processing
+            tempDir = Files.createTempDirectory("facefixer-upload-");
+            originalPath = tempDir.resolve(file.getOriginalFilename());
+            processedPath = tempDir.resolve("detected_" + file.getOriginalFilename());
+            jsonPath = tempDir.resolve("summary_" + file.getOriginalFilename() + ".json");
 
-		         // Read JSON file content (after Python finishes)
-		         String detectionsJson = "";
-		         Path jsonPath = Paths.get(jsonOutputPath);
-		         if (Files.exists(jsonPath)) {
-		             detectionsJson = Files.readString(jsonPath);  // <-- load JSON string
-		         } else {
-		             detectionsJson = "{}"; // fallback
-		         }
+            // ✅ 4. Save Uploaded File Temporarily
+            Files.write(originalPath, file.getBytes());
+            System.out.println("📁 Saved temp file: " + originalPath);
 
-	            // Fetch user by email
-	            Optional<User> userOpt = userRepository.findFirstByEmail(email);
-	            if (userOpt.isEmpty()) {
-	                System.out.println("❌ No user found for email: " + email);
-	                return ResponseEntity.status(HttpStatus.NOT_FOUND)
-	                        .body(Map.of("error", "User not found: " + email));
-	            }
+            // ✅ 5. Run YOLO Detection Script
+            ProcessBuilder pb = new ProcessBuilder(
+                    "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python310\\python.exe",
+                    YOLO_SCRIPT,
+                    MODEL_PATH,
+                    originalPath.toString(),
+                    processedPath.toString(),
+                    jsonPath.toString()
+            );
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
 
-	            User user = userOpt.get();
+            // Read Python output
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println("PYTHON >> " + line);
+            }
+            process.waitFor();
+            System.out.println("✅ YOLO detection completed");
 
-	            // Save detection result
-	            DetectionResult result = new DetectionResult();
-	            result.setUser(user);
-	            result.setImagePath(file.getOriginalFilename());
-	            result.setResultPath("detected_" + file.getOriginalFilename());
-	            result.setCreatedAt(LocalDateTime.now());
-	            result.setDetections(detectionsJson);  //  now saving actual JSON!
+            // ✅ 6. Read Detection JSON Results
+            String detectionsJson = "{}";
+            if (Files.exists(jsonPath)) {
+                detectionsJson = Files.readString(jsonPath);
+                System.out.println("📊 Detections JSON loaded");
+            } else {
+                System.out.println("⚠️ No JSON summary file found, using empty object");
+            }
 
+            // ✅ 7. Upload Both Images to AWS S3
+            String originalS3Key = "uploads/" + file.getOriginalFilename();
+            String processedS3Key = "outputs/detected_" + file.getOriginalFilename();
 
-	            detectionResultService.saveResult(result);
+            s3Service.uploadFile(originalS3Key, originalPath);
+            System.out.println("☁️ Uploaded original image to S3: " + originalS3Key);
 
-	            return ResponseEntity.ok(Map.of(
-	                "uploaded", "/api/image?file=" + file.getOriginalFilename(),
-	                "processed", "/api/image?file=" + "detected_" + file.getOriginalFilename(),
-	                "detections", result.getDetections() // <-- JSON string
-	            ));
+            s3Service.uploadFile(processedS3Key, processedPath);
+            System.out.println("☁️ Uploaded processed image to S3: " + processedS3Key);
 
-	        } catch (Exception e) {
-	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-	                    .body(Map.of("error", "Error processing image: " + e.getMessage()));
-	        }
-	    }
+            // ✅ 8. Fetch User from Database
+            Optional<User> userOpt = userRepository.findFirstByEmail(email);
+            if (userOpt.isEmpty()) {
+                System.out.println("❌ No user found for email: " + email);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "User not found: " + email));
+            }
+            User user = userOpt.get();
+
+            // ✅ 9. Save Detection Result to Database
+            DetectionResult result = new DetectionResult();
+            result.setUser(user);
+            result.setImagePath(originalS3Key);  // S3 key for original image
+            result.setResultPath(processedS3Key); // S3 key for processed image
+            result.setCreatedAt(LocalDateTime.now());
+            result.setDetections(detectionsJson); // JSON string with detection data
+            detectionResultService.saveResult(result);
+            System.out.println("💾 Detection result saved to database");
+
+            // ✅ 10. Clean Up Temporary Files
+            Files.deleteIfExists(originalPath);
+            Files.deleteIfExists(processedPath);
+            Files.deleteIfExists(jsonPath);
+            Files.deleteIfExists(tempDir);
+            System.out.println("🧹 Cleaned up temporary files");
+
+            // ✅ 11. Return Response with Backend Image URLs
+            return ResponseEntity.ok(Map.of(
+                    "uploaded", "/api/image?file=" + file.getOriginalFilename(),
+                    "processed", "/api/image?file=detected_" + file.getOriginalFilename(),
+                    "detections", detectionsJson
+            ));
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            
+            // Clean up temp files in case of error
+            try {
+                if (originalPath != null) Files.deleteIfExists(originalPath);
+                if (processedPath != null) Files.deleteIfExists(processedPath);
+                if (jsonPath != null) Files.deleteIfExists(jsonPath);
+                if (tempDir != null) Files.deleteIfExists(tempDir);
+            } catch (IOException cleanupEx) {
+                System.err.println("⚠️ Failed to cleanup temp files: " + cleanupEx.getMessage());
+            }
+
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error processing image: " + e.getMessage()));
+        }
+    }
+
+    @CrossOrigin(origins = "http://localhost:5173")
+    @GetMapping("/image")
+    public ResponseEntity<byte[]> getImage(@RequestParam("file") String filename) {
+        try {
+            // ✅ Avoid double-prefixing
+            String s3Key = filename;
+            if (!filename.startsWith("uploads/") && !filename.startsWith("outputs/")) {
+                s3Key = filename.startsWith("detected_")
+                        ? "outputs/" + filename
+                        : "uploads/" + filename;
+            }
+
+            System.out.println("📥 Fetching from S3: " + s3Key);
+
+            byte[] fileBytes = s3Service.downloadFile(s3Key);
+
+            String contentType = "image/png";
+            if (filename.toLowerCase().endsWith(".jpg") || filename.toLowerCase().endsWith(".jpeg")) {
+                contentType = "image/jpeg";
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .body(fileBytes);
+
+        } catch (Exception e) {
+            System.err.println("❌ Error fetching image from S3: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+}
 	    
 	 // Only uncomment this if you ready to use AWS, otherwise don't change anything out of it!
 
@@ -239,27 +426,28 @@ import ca.sheridancollege.dobariyz.util.JwtUtil;
 //	    }
 
 	    
-	    @CrossOrigin(origins = "http://localhost:5173")
-	    @GetMapping("/image")
-	    public ResponseEntity<Resource> getImage(@RequestParam("file") String filename) throws IOException {
-	        Path uploadPath = Paths.get("uploads").resolve(filename);
-	        Path outputPath = Paths.get("outputs").resolve(filename);
-
-	        Path filePath = Files.exists(outputPath) ? outputPath : uploadPath;
-
-	        if (!Files.exists(filePath)) {
-	            return ResponseEntity.notFound().build();
-	        }
-
-	        Resource resource = new UrlResource(filePath.toUri());
-	        String contentType = Files.probeContentType(filePath);
-
-	        return ResponseEntity.ok()
-	                .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"))
-	                .body(resource);
-	    }
-	}
+//	    @CrossOrigin(origins = "http://localhost:5173")
+//	    @GetMapping("/image")
+//	    public ResponseEntity<Resource> getImage(@RequestParam("file") String filename) throws IOException {
+//	        Path uploadPath = Paths.get("uploads").resolve(filename);
+//	        Path outputPath = Paths.get("outputs").resolve(filename);
+//
+//	        Path filePath = Files.exists(outputPath) ? outputPath : uploadPath;
+//
+//	        if (!Files.exists(filePath)) {
+//	            return ResponseEntity.notFound().build();
+//	        }
+//
+//	        Resource resource = new UrlResource(filePath.toUri());
+//	        String contentType = Files.probeContentType(filePath);
+//
+//	        return ResponseEntity.ok()
+//	                .contentType(MediaType.parseMediaType(contentType != null ? contentType : "application/octet-stream"))
+//	                .body(resource);
+//	    }
+//	}
 	    
+//	AWS
 //	    @CrossOrigin(origins = "http://localhost:5173")
 //	    @GetMapping("/image")
 //	    public ResponseEntity<byte[]> getImage(@RequestParam("file") String filename) {

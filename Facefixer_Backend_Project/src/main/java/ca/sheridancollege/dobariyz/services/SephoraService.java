@@ -15,16 +15,15 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 public class SephoraService {
-	@Value("${rapidapi.key}")
-	private String apiKey;
+    @Value("${rapidapi.key}")
+    private String apiKey;
 
-	@Value("${rapidapi.host}")
-	private String apiHost;
+    @Value("${rapidapi.host}")
+    private String apiHost;
 
-	
     private static final String API_URL = "https://sephora.p.rapidapi.com/us/products/v2/search?q=";
 
-    public List<Map<String, Object>> getProducts(String keyword) {
+    public List<Map<String, Object>> getProducts(String keyword, int limit) {
         RestTemplate restTemplate = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -49,10 +48,11 @@ public class SephoraService {
         List<Map<String, Object>> cleaned = new ArrayList<>();
 
         for (Map<String, Object> product : products) {
+            if (cleaned.size() >= limit) break;
+
             Map<String, Object> currentSku = (Map<String, Object>) product.get("currentSku");
             if (currentSku == null) continue;
 
-            //  safely parse rating
             double rating = 0.0;
             if (product.get("rating") != null) {
                 try {
@@ -60,12 +60,28 @@ public class SephoraService {
                 } catch (NumberFormatException ignored) {}
             }
 
-            //  keep only good products
             if (rating < 4.0) continue;
 
             String price = (currentSku.get("listPrice") != null)
                     ? currentSku.get("listPrice").toString()
                     : "N/A";
+
+            // ✅ Build proper Sephora URL
+            String targetUrl = product.get("targetUrl") != null 
+                    ? product.get("targetUrl").toString() 
+                    : "";
+            
+            String productUrl = "";
+            if (!targetUrl.isEmpty()) {
+                // If targetUrl already starts with http, use it as-is
+                if (targetUrl.startsWith("http")) {
+                    productUrl = targetUrl;
+                } else {
+                    // Otherwise prepend Sephora domain
+                    productUrl = "https://www.sephora.com" + 
+                            (targetUrl.startsWith("/") ? targetUrl : "/" + targetUrl);
+                }
+            }
 
             Map<String, Object> item = new HashMap<>();
             item.put("id", product.get("productId"));
@@ -75,13 +91,34 @@ public class SephoraService {
             item.put("rating", rating);
             item.put("reviews", product.get("reviews"));
             item.put("image", product.get("heroImage"));
-            item.put("url", "https://www.sephora.com" + product.get("targetUrl"));
+            item.put("url", productUrl);
+            
+            // ✅ Add SKU ID for better tracking
+            item.put("skuId", currentSku.get("skuId"));
 
             cleaned.add(item);
         }
 
-        //  always return top 5
-        return cleaned.size() > 5 ? cleaned.subList(0, 5) : cleaned;
+        return cleaned;
     }
+    
+    public List<Map<String, Object>> getSimplifiedProducts(String keyword) {
+        List<Map<String, Object>> fullProducts = getProducts(keyword, 10);
+        List<Map<String, Object>> simplifiedList = new ArrayList<>();
 
+        for (Map<String, Object> product : fullProducts) {
+            Map<String, Object> simplified = new HashMap<>();
+            simplified.put("name", product.get("name"));
+            simplified.put("brand", product.get("brand"));
+            simplified.put("price", product.get("price"));
+            simplified.put("image", product.get("image"));
+            simplified.put("url", product.get("url"));
+            simplified.put("rating", product.get("rating"));
+            simplified.put("productId", product.get("id")); // ✅ Include product ID
+            simplified.put("skuId", product.get("skuId")); // ✅ Include SKU ID
+            simplifiedList.add(simplified);
+        }
+
+        return simplifiedList;
+    }
 }

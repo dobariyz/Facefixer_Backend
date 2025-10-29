@@ -39,7 +39,7 @@ public class ProductSearchController {
                 return ResponseEntity.badRequest().body(Map.of("error", "Search query cannot be empty"));
             }
 
-            List<Map<String, Object>> results = sephoraService.getProducts(query);
+            List<Map<String, Object>> results = sephoraService.getSimplifiedProducts(query);
             return ResponseEntity.ok(results);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

@@ -10,10 +10,12 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
+import software.amazon.awssdk.services.s3.model.S3Exception;
 
-//@Service
+@Service
 public class S3Service {
 
     private final String bucketName;
@@ -60,5 +62,24 @@ public class S3Service {
                 .build();
 
         return s3Client.getObject(getObjectRequest).readAllBytes();
+    }
+    
+ // ✅ Delete file
+    public void deleteFile(String keyName) {
+        try {
+            System.out.println("🗑️ Attempting to delete file from S3: " + keyName);
+
+            DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                    .bucket(bucketName)
+                    .key(keyName)
+                    .build();
+
+            s3Client.deleteObject(deleteObjectRequest);
+            System.out.println("✅ Successfully deleted from S3: " + keyName);
+
+        } catch (S3Exception e) {
+            System.err.println("❌ Failed to delete file from S3: " + e.awsErrorDetails().errorMessage());
+            throw e;
+        }
     }
 }
