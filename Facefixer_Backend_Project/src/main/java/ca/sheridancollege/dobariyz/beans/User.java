@@ -1,5 +1,7 @@
 package ca.sheridancollege.dobariyz.beans;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -34,6 +36,9 @@ public class User {
 	
 	@Column(nullable = true)
 	private String password;
+	
+	@Column(name = "terms_accepted_at")
+	private LocalDateTime termsAcceptedAt;	
 	
 	private String role;
 }

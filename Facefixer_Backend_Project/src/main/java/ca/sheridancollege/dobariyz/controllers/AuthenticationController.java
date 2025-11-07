@@ -1,5 +1,6 @@
 package ca.sheridancollege.dobariyz.controllers;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -126,6 +127,65 @@ public class AuthenticationController {
             return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Error fetching user profile"));
+        }
+    }
+ // NEW ENDPOINT: Accept Terms & Conditions
+    @CrossOrigin(origins = "*")
+    @PostMapping("/accept-terms")
+    public ResponseEntity<?> acceptTerms(@RequestHeader("Authorization") String token) {
+        try {
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+
+            String email = jwtUtil.extractEmail(token);
+
+            if (!jwtUtil.validateToken(token, email)) {
+                return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
+            }
+
+            Optional<User> userOpt = userRepository.findFirstByEmail(email);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+            }
+
+            User user = userOpt.get();
+            user.setTermsAcceptedAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Terms accepted successfully",
+                    "termsAcceptedAt", user.getTermsAcceptedAt().toString()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Error accepting terms"));
+        }
+    }
+
+    // NEW ENDPOINT: Check if user has accepted terms
+    @CrossOrigin(origins = "*")
+    @GetMapping("/check-terms")
+    public ResponseEntity<?> checkTerms(@RequestHeader("Authorization") String token) {
+        try {
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+
+            String email = jwtUtil.extractEmail(token);
+
+            if (!jwtUtil.validateToken(token, email)) {
+                return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
+            }
+
+            Optional<User> userOpt = userRepository.findFirstByEmail(email);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+            }
+
+            User user = userOpt.get();
+            return ResponseEntity.ok(Map.of("termsAccepted", user.getTermsAcceptedAt() != null));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Error checking terms status"));
         }
     }
 }
