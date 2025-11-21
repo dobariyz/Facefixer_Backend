@@ -1,13 +1,16 @@
 package ca.sheridancollege.dobariyz.services;
 
-import java.util.List;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ca.sheridancollege.dobariyz.beans.Subscription;
 import ca.sheridancollege.dobariyz.beans.User;
+import ca.sheridancollege.dobariyz.repositories.SubscriptionRepository;
 import ca.sheridancollege.dobariyz.repositories.UserRepository;
 import ca.sheridancollege.dobariyz.util.JwtUtil;
 
@@ -22,56 +25,61 @@ public class AuthenticationService {
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = new BCryptPasswordEncoder();
     }
+    
+    @Autowired
+    private SubscriptionRepository subscriptionRepository;
 
-    @Transactional
+    @Transactional // ✅ Ensure both user and subscription are created together
     public String registerUser(String firstName, String lastName, String email, String password) {
-    	
-    	System.out.println("Received values: ");
-        System.out.println("First Name: " + firstName);
-        System.out.println("Last Name: " + lastName);
-        System.out.println("Email: " + email);
-        System.out.println("Password: " + password);
-
-        if (firstName == null || lastName == null || email == null || password == null) {
-            throw new IllegalArgumentException("All fields are required");
+        // 1. Check if email already exists
+        Optional<User> existingUser = userRepository.findFirstByEmail(email);
+        if (existingUser.isPresent()) {
+            throw new IllegalArgumentException("Email already registered");
         }
-        
-    	List<User> users = userRepository.findByEmail(email);
 
-    	if (!users.isEmpty()) {
-    	    throw new IllegalArgumentException("Email already exists");
-    	}
-
+        // 2. Create and save new user
         User user = new User();
         user.setFirstName(firstName);
         user.setLastName(lastName);
         user.setEmail(email);
-        user.setPassword(passwordEncoder.encode(password)); // Hash password
+        user.setPassword(passwordEncoder.encode(password));
+        user.setRole("USER"); // Default role
         
-        System.out.println("Saving user to database...");
-        userRepository.save(user);
-        System.out.println("User saved: " + user);
+        User savedUser = userRepository.save(user);
+        System.out.println("✅ User created: " + savedUser.getEmail());
 
+        // 3. ✅ AUTO-CREATE FREE SUBSCRIPTION (NEW!)
+        Subscription subscription = new Subscription(savedUser); // Uses constructor with defaults
+        subscriptionRepository.save(subscription);
+        System.out.println("✅ Free subscription created for user: " + savedUser.getEmail());
+        System.out.println("   Tier: " + subscription.getTier());
+        System.out.println("   Uploads: " + subscription.getUploadsUsed() + "/" + subscription.getUploadsLimit());
+
+        // 4. Generate JWT token
         String token = jwtUtil.generateToken(email);
-        System.out.println("Generated Token: " + token);
-        System.out.println("User saved successfully!");
         
         return token;
-
     }
 
+    /**
+     * ✅ Login user
+     */
     public String loginUser(String email, String password) {
-    	 List<User> users = userRepository.findByEmail(email);
-    	    if (users.isEmpty()) {
-    	        throw new RuntimeException("User not found");  // This should return an error response instead
-    	    }
+        Optional<User> userOpt = userRepository.findFirstByEmail(email);
+        
+        if (userOpt.isEmpty()) {
+            throw new RuntimeException("Invalid email or password");
+        }
 
-    	    User user = users.get(0);
-    	    if (!passwordEncoder.matches(password, user.getPassword())) {
-    	        throw new RuntimeException("Invalid credentials");  // Same issue here
-    	    }
+        User user = userOpt.get();
 
-    	    return jwtUtil.generateToken(email);
+        // Verify password
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new RuntimeException("Invalid email or password");
+        }
+
+        // Generate JWT token
+        return jwtUtil.generateToken(email);
     }
 }
 

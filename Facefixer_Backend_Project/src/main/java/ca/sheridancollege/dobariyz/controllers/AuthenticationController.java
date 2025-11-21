@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -186,6 +188,74 @@ public class AuthenticationController {
             return ResponseEntity.ok(Map.of("termsAccepted", user.getTermsAcceptedAt() != null));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Error checking terms status"));
+        }
+    }
+    
+ // Add this endpoint to your AuthenticationController.java
+
+    /**
+     * ✅ PUT /auth/update-profile
+     * Update user profile information
+     */
+    @CrossOrigin(origins = "*")
+    @PutMapping("/update-profile")
+    public ResponseEntity<?> updateProfile(
+            @RequestHeader("Authorization") String token,
+            @RequestBody Map<String, String> updates) {
+        try {
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+
+            String email = jwtUtil.extractEmail(token);
+
+            if (!jwtUtil.validateToken(token, email)) {
+                return ResponseEntity.status(401).body(Map.of("error", "Invalid token"));
+            }
+
+            Optional<User> userOpt = userRepository.findFirstByEmail(email);
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("error", "User not found"));
+            }
+
+            User user = userOpt.get();
+
+            // Update fields if provided
+            if (updates.containsKey("firstName") && updates.get("firstName") != null) {
+                user.setFirstName(updates.get("firstName").trim());
+            }
+            if (updates.containsKey("lastName") && updates.get("lastName") != null) {
+                user.setLastName(updates.get("lastName").trim());
+            }
+            if (updates.containsKey("email") && updates.get("email") != null) {
+                String newEmail = updates.get("email").trim();
+                
+                // Check if new email is already taken by another user
+                if (!newEmail.equals(email)) {
+                    Optional<User> existingUser = userRepository.findFirstByEmail(newEmail);
+                    if (existingUser.isPresent()) {
+                        return ResponseEntity.status(400)
+                                .body(Map.of("error", "Email already in use"));
+                    }
+                    user.setEmail(newEmail);
+                }
+            }
+
+            userRepository.save(user);
+
+            System.out.println("✅ Profile updated for user: " + email);
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Profile updated successfully",
+                    "firstName", user.getFirstName(),
+                    "lastName", user.getLastName(),
+                    "email", user.getEmail()
+            ));
+
+        } catch (Exception e) {
+            System.err.println("❌ Error updating profile: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Error updating profile"));
         }
     }
 }
